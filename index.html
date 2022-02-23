@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+		<title>Heptagone</title>
+	</head>
+	<body>
+		<section id="garbage"></section>
+		<script language="javascript">
+// utilisé par dessin. svgDoc prend une valeur après l'appel de initSVG.
+var H = 6,
+	border = 10,
+	padding = 10,
+	rayon = 50,
+	xmlns = "http://www.w3.org/2000/svg";
+
+function iter_swap(t, i1, i2) {
+	var temp = t[i1];
+	t[i1] = t[i2];
+	t[i2] = temp;
+}
+
+function reverse(t, first, last) {
+	while ((first != last) && (first != --last))
+		iter_swap(t, first++, last);
+}
+
+function next_permutation(t, first, last) {
+	if (first == last) return false;
+	var i = last;
+	if (first == --i) return false;
+	while (true) {
+		var i1 = i, i2;
+		if (t[--i] < t[i1]) {
+			i2 = last;
+			while (!(t[i] < t[--i2]));
+			iter_swap(t, i, i2);
+			reverse(t, i1, last);
+			return true;
+		}
+		if (i == first) {
+			reverse(t, first, last);
+			return false;
+		}
+	}
+}
+
+function is_rotate(perm, qerm, r) {
+	for (var i = 0; i < perm.length; i++)
+		if (perm[i] != qerm[(i+r) % perm.length])
+			return false;
+	return true;
+}
+
+function is_rotate_plus(perm, qerm, r, q) {
+	for (var i = 0; i < perm.length; i++)
+		if (perm[i] != (qerm[(i+r) % perm.length] + q) % perm.length)
+			return false;
+	return true;
+}
+
+function compare(perm, kperm) {
+	for (var r = 0; r < perm.length; r++) {
+		if (is_rotate(perm, kperm, r))
+			return false;
+		for (var q = 0; q < perm.length; q++)
+			if (is_rotate_plus(perm, kperm, r, q))
+				return false;
+	}
+	return true;
+}
+
+function compare_reverse_too(perm, kperm) {
+	if (!compare(perm, kperm))
+		return false;
+	var c = copy(perm);
+	reverse(c, 0, c.length);
+	return compare(c, kperm);
+}
+
+function compare_chiral_too(perm, kperm) {
+	if (!compare_reverse_too(perm, kperm))
+		return false;
+	/*var c = copy(perm);
+	for (var i = 0; i < c.length; i++)
+		c[i] = (c.length - c[i]) % c.length ;
+	return compare_reverse_too(c, kperm);*/
+	return true;
+}
+
+function compare_to_any(perm, known_perms, matching) {
+	for (var i = 0; i < known_perms.length; i++)
+		if (!compare_chiral_too(perm, known_perms[i]))
+			return false;
+	return true;
+}
+
+function copy(perm) {
+	var c = [];
+	for (var i = 0; i < perm.length; i++)
+		c.push(perm[i]);
+	return c;
+}
+
+var current_perm = [0,1,2,3,4,5,6];
+var unique_perms = [];
+
+do {
+	if (compare_to_any(current_perm, unique_perms))
+		unique_perms.push(copy(current_perm));
+} while(next_permutation(current_perm, 1, 7));
+
+function createPoints(p, r) {
+	var pts = "";
+	for (var k = 0; k < p.length; k++)
+		pts += (Math.cos(2*p[k]*Math.PI/p.length)*r) + "," + (Math.sin(2*p[k]*Math.PI/p.length)*r) + " ";
+	return pts;
+}
+
+function createPolygon(p, x, y, r, angle, fill, stroke) {
+	var u = document.createElementNS(xmlns, "polygon");
+	u.setAttributeNS(null, "points", createPoints(p, r));
+	u.setAttributeNS(null, "fill", fill);
+	u.setAttributeNS(null, "stroke", stroke);
+	u.setAttributeNS(null, "transform", "translate("+x+","+y+") rotate("+angle+", "+x+", "+y+")");
+	return u;
+}
+
+var L = unique_perms.length / H;
+var s = document.createElementNS(xmlns, "svg"),
+	width = border*2 + padding*(L-1) + 2*rayon*L,
+	height = border*2 + padding*(H-1) + 2*rayon*H;
+s.setAttributeNS (null, "width", width);
+s.setAttributeNS (null, "height", height);
+
+for (var i = 0, k = 0; i < unique_perms.length; k++)
+	for (var j = 0; j < H && i < unique_perms.length; i++, j++)
+		s.appendChild(createPolygon(unique_perms[i], width/2+(2*rayon+padding)*((L-1)/2-k), height/2+(2*rayon+padding)*((H-1)/2-j), rayon, 0, "none", "black"));
+
+document.getElementById("garbage").appendChild(s);
+
+</script>
+	</body>
+</html>
