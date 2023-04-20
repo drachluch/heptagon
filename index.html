@@ -5,38 +5,20 @@
 		<link rel="icon" type="image/png" href="low_effort_icone.png" />
 		<meta name="viewport" content="width=device-width,initial-scale=1">
 		<title>Heptagone</title>
-		<style>polygon { stroke-width: 2px; }</style>
+		<style>polygon { stroke-width: 2px; } text { stroke: red; }</style>
 	</head>
 	<body>
-		<section>
-			<a href="?n=3">Triangle(1)</a>
-			<a href="?n=4">Quadrilatère(2)</a>
-			<a href="?n=5">Pentagone(4)</a>
-			<a href="?n=6&chiral">Hexagone(12)</a>
-			<a href="?n=6">Hexagone(14)</a>
-			<a href="?n=7&chiral">Heptagone(39)</a>
-			<a href="?n=7">Heptagone(54)</a>
-			<a href="?n=8&chiral">Octogone(202)</a>
-			<a href="?n=8">Octogone(332)</a>
-			<a href="?n=9&chiral">Nonagone(1219)</a>
-			<a href="?n=9">Nonagone(2246)</a>
-			<a href="?n=10&chiral">Décagone(9468)</a>
-			<a href="?n=10">Décagone(18264)</a>
-		</section>
 		<section id="drawing_area"></section>
 		
 		<script language="javascript">
-var H = 6,
-	edges = 7,
-	chiral = false,
-	border = 15,
+var border = 15,
 	padding = 20,
 	rayon = 50,
 	xmlns = "http://www.w3.org/2000/svg";
 
-Array.prototype.clone = function() { return this.slice(0); }
-Array.prototype.swap = function (x,y) { var b = this[x]; this[x] = this[y]; this[y] = b; return this; }
-Array.prototype.reverse = function(first, last) { while ((first != last) && (first != --last)) this.swap(first++, last); }
+Array.prototype.clone = function() { return this.slice(0); };
+Array.prototype.swap = function (x,y) { var b = this[x]; this[x] = this[y]; this[y] = b; return this; };
+Array.prototype.reverse = function(first, last) { while ((first != last) && (first != --last)) this.swap(first++, last); return this; };
 Array.prototype.rotate = function(first, middle, last) {
 	// https://en.cppreference.com/w/cpp/algorithm/rotate, Possible Implementation
 	if (first == middle)
@@ -51,7 +33,7 @@ Array.prototype.rotate = function(first, middle, last) {
 	}
 	this.rotate(write, next_read, last); // rotate the remaining sequence into place
 	return write;
-}
+};
 Array.prototype.next_permutation = function(first, last) {
 	// https://en.cppreference.com/w/cpp/algorithm/next_permutation, Possible Implementation
 	if (first == last) return false;
@@ -71,7 +53,7 @@ Array.prototype.next_permutation = function(first, last) {
 			return false;
 		}
 	}
-}
+};
 Array.prototype.binary_search = function(el) { 
 	if (this.length == 0)
 		return false;
@@ -86,10 +68,12 @@ Array.prototype.binary_search = function(el) {
 			return true;
 	}
 	return !(this[beg] < el) && !(this[beg] > el);
-}
-Array.prototype.insert_sorted = function(el) { this.push(el); for (var i = this.length-1, comp; i > 0; i--) { if (this[i-1] < this[i]) return this; this.swap(i-1, i); } return this; }
-Array.prototype.weird_rotate = function() { /* 'rotation' of values ? */ for (var i = 0; i < this.length; i++) { this[i]++; if (this[i] == this.length) this[i] = 0; } return this; }
-Array.prototype.weird_mirror = function() { /* 'mirror' of values ? */ for (var i = 0; i < this.length; i++) this[i] = this.length - 1 - this[i]; return this; }
+};
+Array.prototype.insert_sorted = function(el) { this.push(el); for (var i = this.length-1, comp; i > 0; i--) { if (this[i-1] < this[i]) return this; this.swap(i-1, i); } return this; };
+Array.prototype.weird_rotate = function() { /* 'rotation' of values ? */ for (var i = 0; i < this.length; i++) { this[i]++; if (this[i] == this.length) this[i] = 0; } return this; };
+Array.prototype.weird_rotateN = function(n) { /* 'rotation' of values ? */ for (var i = 0; i < this.length; i++) { this[i] = (this[i]+n)%this.length; } return this; };
+Array.prototype.weird_mirror = function() { /* 'mirror' of values ? */ for (var i = 0; i < this.length; i++) this[i] = this.length - 1 - this[i]; return this; };
+Array.prototype.weird_mirrorN = function(n) { /* 'mirror' of values ? */ for (var i = 0; i < this.length; i++) { this[i] = (this.length-this[i]+n)%this.length; } return this; };
 Array.prototype.canonical = function(chiral) {
 	var best = this.clone(), v = this.clone(), q;
 	for (q = 0; q < this.length; q++) {
@@ -105,54 +89,53 @@ Array.prototype.canonical = function(chiral) {
 		if (v < best) return v;
 	}
 	return best;
-}
+};
+Array.prototype.is_symetry_axis = function(k) { var v = this.clone().weird_mirrorN(k); v.rotate(0, v.indexOf(this[0]), v.length); if (!(v < this) && !(this < v)) return true; v.reverse(1, v.length); return !(v < this) && !(this < v); };
+Array.prototype.symetry_axis = function() { var sym_axis = []; for (var i = 0; i < this.length; i++) if (this.is_symetry_axis(i)) sym_axis.push(i); return sym_axis; };
+Array.prototype.has_central_symetry = function() { if (this.length%2 != 0) return false; var v = this.clone().weird_rotateN(Math.floor(this.length/2)); v.rotate(0, v.indexOf(this[0]), v.length); if (!(v < this) && !(this < v)) return true; v.reverse(1, v.length); return !(v < this) && !(this < v); };
+Array.prototype.can_rotate = function(k) { var v = this.clone().weird_rotateN(k); v.rotate(0, v.indexOf(this[0]), v.length); if (!(v < this) && !(this < v)) return true; v.reverse(1, v.length); return !(v < this) && !(this < v); };
+Array.prototype.has_symetry_axis = function() { var v = this.canonical(), w; w = v.clone().weird_mirror().canonical(); return !(v < w) && !(v > w); };
 
 function identity(n) { var v = new Array(n); for (var i = 0; i < n; i++) v[i] = i; return v; }
 function middle_divisor(n) { var i = 2, j = 4, lst_divisor = 1; for (;;) { if (n % i == 0) lst_divisor = i; j += 2 * i + 1; if (j > n) return lst_divisor; i++; } }
-function compute_unique_permutations(n, chiral) {
-	var curr = identity(edges), canon, unique_perms = [];
-	do {
-		canon = curr.canonical(chiral);
-		if (!unique_perms.binary_search(canon))
-			unique_perms.insert_sorted(canon);
-	} while(curr.next_permutation(1, curr.length));
-	return unique_perms;
-}
+function compute_unique_permutations(n, chiral) { var curr = identity(edges), canon, unique_perms = [], threshold = Math.floor(n/2)+1; do { canon = curr.canonical(chiral); if (!unique_perms.binary_search(canon)) unique_perms.insert_sorted(canon); } while(curr.next_permutation(1, curr.length) && curr[1] < threshold); return unique_perms; }
 
-function createPoints(p, r) {
-	var pts = "";
-	for (var k = 0; k < p.length; k++)
-		pts += (Math.cos(2*p[k]*Math.PI/p.length)*r) + "," + (Math.sin(2*p[k]*Math.PI/p.length)*r) + " ";
-	return pts;
-}
-function createPolygon(p, x, y, r, angle, fill, stroke) {
-	var u = document.createElementNS(xmlns, "polygon");
-	u.setAttributeNS(null, "points", createPoints(p, r));
-	u.setAttributeNS(null, "fill", fill);
-	u.setAttributeNS(null, "stroke", stroke);
-	u.setAttributeNS(null, "transform", "translate("+x+","+y+") rotate("+angle+", "+x+", "+y+")");
-	return u;
-}
+function createPoints(p, r) { var pts = ""; for (var k = 0; k < p.length; k++) pts += (Math.cos(2*p[k]*Math.PI/p.length)*r) + "," + (Math.sin(2*p[k]*Math.PI/p.length)*r) + " "; return pts; }
+function createPolygon(p, x, y, r, angle, fill, stroke) { var u = document.createElementNS(xmlns, "polygon"); u.setAttributeNS(null, "points", createPoints(p, r)); u.setAttributeNS(null, "fill", fill); u.setAttributeNS(null, "stroke", stroke); u.setAttributeNS(null, "transform", "translate("+x+","+y+") rotate("+angle+", "+x+", "+y+")"); return u; }
+function createText(x, y, v) { var u = document.createElementNS(xmlns, "text"); u.setAttributeNS(null, "x", x); u.setAttributeNS(null, "y", y); u.appendChild(document.createTextNode(v)); return u; }
 
-var q = new URLSearchParams(window.location.search);
+var q = new URLSearchParams(window.location.search), chiral = false, edges = 7;
 if (+q.get('n') > 2)
 	edges = +q.get('n');
 if (q.has('chiral'))
 	chiral = true;
 
 var unique_perms = compute_unique_permutations(edges, chiral);
-H = q.has('paysage') ? middle_divisor(unique_perms.length) : unique_perms.length / middle_divisor(unique_perms.length);
 
+if (q.has('sym')) {
+	var ms = +q.get('sym');
+	unique_perms = unique_perms.filter(item => (item.symetry_axis().length >= ms));
+}
+if (q.has('central'))
+	unique_perms = unique_perms.filter(item => item.has_central_symetry());
+if (q.has('rot')) {
+	var rot = +q.get('rot');
+	unique_perms = unique_perms.filter(item => item.can_rotate(rot));
+}
+
+var H = q.has('portrait') ? unique_perms.length / middle_divisor(unique_perms.length) : middle_divisor(unique_perms.length);
 var L = unique_perms.length / H;
-var s = document.createElementNS(xmlns, "svg"),
-	width = border*2 + padding*(L-1) + 2*rayon*L,
-	height = border*2 + padding*(H-1) + 2*rayon*H;
+var s = document.createElementNS(xmlns, "svg"), width = border*2 + padding*(L-1) + 2*rayon*L, height = border*2 + padding*(H-1) + 2*rayon*H;
 s.setAttributeNS (null, "width", width);
 s.setAttributeNS (null, "height", height);
 
+var color, nb_sym;
 for (var i = 0, k = 0; i < unique_perms.length; k++)
-	for (var j = 0; j < H && i < unique_perms.length; i++, j++)
-		s.appendChild(createPolygon(unique_perms[i], width/2+(2*rayon+padding)*((L-1)/2-k), height/2+(2*rayon+padding)*((H-1)/2-j), rayon, 0, "none", "black"));
+	for (var j = 0; j < H && i < unique_perms.length; i++, j++) {
+		nb_sym = unique_perms[i].symetry_axis().length;
+		color = nb_sym > 0 ? (nb_sym > 1 ? "red" : "blue") : "black";
+		s.appendChild(createPolygon(unique_perms[i], width/2+(2*rayon+padding)*((L-1)/2-k), height/2+(2*rayon+padding)*((H-1)/2-j), rayon, 0, "none", color));
+	}
 
 document.getElementById("drawing_area").appendChild(s);
 
