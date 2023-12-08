@@ -101,7 +101,7 @@ function middle_divisor(n) { var i = 2, j = 4, lst_divisor = 1; for (;;) { if (n
 function compute_unique_permutations(n, chiral) { var curr = identity(edges), canon, unique_perms = [], threshold = Math.floor(n/2)+1; do { canon = curr.canonical(chiral); if (!unique_perms.binary_search(canon)) unique_perms.insert_sorted(canon); } while(curr.next_permutation(1, curr.length) && curr[1] < threshold); return unique_perms; }
 
 function createPoints(p, r) { var pts = ""; for (var k = 0; k < p.length; k++) pts += (Math.cos(2*p[k]*Math.PI/p.length)*r) + "," + (Math.sin(2*p[k]*Math.PI/p.length)*r) + " "; return pts; }
-function createPolygon(p, x, y, r, angle, fill, stroke) { var u = document.createElementNS(xmlns, "polygon"); u.setAttributeNS(null, "points", createPoints(p, r)); u.setAttributeNS(null, "fill", fill); u.setAttributeNS(null, "stroke", stroke); u.setAttributeNS(null, "transform", "translate("+x+","+y+") rotate("+angle+", "+x+", "+y+")"); return u; }
+function createPolygon(p, x, y, r, angle, fill, stroke) { var u = document.createElementNS(xmlns, "polygon"); u.setAttributeNS(null, "id", p.join('')); u.setAttributeNS(null, "points", createPoints(p, r)); u.setAttributeNS(null, "fill", fill); u.setAttributeNS(null, "stroke", stroke); u.setAttributeNS(null, "transform", "translate("+x+","+y+") rotate("+angle+", "+x+", "+y+")"); return u; }
 function createText(x, y, v) { var u = document.createElementNS(xmlns, "text"); u.setAttributeNS(null, "x", x); u.setAttributeNS(null, "y", y); u.appendChild(document.createTextNode(v)); return u; }
 
 var q = new URLSearchParams(window.location.search), chiral = false, edges = 7;
